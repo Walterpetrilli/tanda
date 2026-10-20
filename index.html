@@ -1,0 +1,717 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Tanda</title>
+<meta name="theme-color" content="#EEF0EC" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#111513" media="(prefers-color-scheme: dark)">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Tanda">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" href="icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#EEF0EC; --card:#FFFFFF; --ink:#1D2422; --muted:#646C68; --line:#D5D9D2;
+  --btn:#1D2422; --btn-ink:#FFFFFF; --soft:#E3E6E0;
+  --gold:#F5C518; --red:#E0322B; --blue:#2C8FD6; --black:#1A1A1A; --white:#FAFAFA;
+  --warn:#B54708;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#111513; --card:#1A1F1D; --ink:#ECEEEA; --muted:#9AA29E; --line:#2C3330;
+    --btn:#ECEEEA; --btn-ink:#111513; --soft:#242B28; --warn:#F79009;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#111513; --card:#1A1F1D; --ink:#ECEEEA; --muted:#9AA29E; --line:#2C3330;
+  --btn:#ECEEEA; --btn-ink:#111513; --soft:#242B28; --warn:#F79009;
+}
+*,*::before,*::after{box-sizing:inherit}
+[hidden]{display:none!important}
+html{height:100%;scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;min-height:100%;background:var(--bg);color:var(--ink);
+  font:16px/1.5 "Barlow",system-ui,-apple-system,"Segoe UI",sans-serif;-webkit-text-size-adjust:100%}
+.num,h1,h2,.big{font-family:"Barlow Condensed","Arial Narrow",system-ui,sans-serif}
+main{max-width:560px;margin:0 auto;padding:16px 16px 48px}
+h1{font-size:22px;font-weight:600;margin:0;letter-spacing:.01em}
+h2{font-size:20px;font-weight:600;margin:28px 0 10px}
+p{margin:0}
+.muted{color:var(--muted)}
+.top{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
+.linkbtn{background:none;border:0;color:var(--ink);font:inherit;font-weight:500;text-decoration:underline;text-underline-offset:3px;padding:6px 0;cursor:pointer}
+.hero{display:flex;align-items:flex-end;gap:18px;margin:4px 0 18px}
+.big{font-size:88px;line-height:.85;font-weight:700;letter-spacing:-.01em}
+.stats{display:grid;grid-template-columns:auto auto;gap:2px 14px;font-size:14px;padding-bottom:6px}
+.stats b{font-family:"Barlow Condensed",sans-serif;font-size:18px;font-weight:600}
+.actions{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.btn{display:flex;align-items:center;justify-content:center;gap:8px;min-height:52px;border-radius:12px;border:1.5px solid var(--btn);
+  background:var(--btn);color:var(--btn-ink);font:600 17px "Barlow",sans-serif;cursor:pointer;padding:0 14px;text-align:center}
+.btn.ghost{background:transparent;color:var(--ink)}
+.btn.small{min-height:40px;font-size:15px;border-radius:10px}
+.btn:disabled{opacity:.45;cursor:default}
+.btn:focus-visible,.linkbtn:focus-visible,.chip:focus-visible{outline:3px solid var(--blue);outline-offset:2px}
+input[type=file]{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}
+.sheet{background:var(--card);border-radius:14px;overflow:hidden;border:1px solid var(--line)}
+.row{display:grid;grid-template-columns:28px 1fr 44px 52px;align-items:center;gap:8px;padding:9px 12px;border-top:1px solid var(--line)}
+.row:first-child{border-top:0}
+.row.head{font-size:13px;color:var(--muted);padding-top:8px;padding-bottom:6px}
+.row .n{color:var(--muted);font-family:"Barlow Condensed",sans-serif;font-size:17px}
+.row .t,.row .c{text-align:right;font-family:"Barlow Condensed",sans-serif;font-size:21px;font-weight:600}
+.row .c{color:var(--muted);font-weight:500}
+.chips{display:flex;flex-wrap:wrap;gap:4px}
+.chip{display:inline-flex;align-items:center;justify-content:center;min-width:28px;height:28px;padding:0 4px;border-radius:7px;
+  font:600 17px "Barlow Condensed",sans-serif;border:1px solid transparent}
+.s10,.s9{background:var(--gold);color:#1A1A1A}
+.s8,.s7{background:var(--red);color:#fff}
+.s6,.s5{background:var(--blue);color:#fff}
+.s4,.s3{background:var(--black);color:#fff;border-color:#555}
+.s2,.s1{background:var(--white);color:#1A1A1A;border-color:#BDBDBD}
+.s0{background:var(--soft);color:var(--muted)}
+.empty{padding:22px 16px;text-align:center;color:var(--muted)}
+.delrow{background:none;border:0;color:var(--muted);font-size:20px;cursor:pointer;padding:0 0 0 6px;line-height:1}
+.plotwrap{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px}
+canvas.plot{width:100%;max-width:340px;display:block;margin:0 auto;aspect-ratio:1}
+.hist{display:flex;justify-content:space-between;align-items:center;padding:12px;border-top:1px solid var(--line);cursor:pointer;background:none;border-left:0;border-right:0;border-bottom:0;width:100%;color:var(--ink);font:inherit;text-align:left}
+.hist:first-child{border-top:0}
+.hist .num{font-size:24px;font-weight:600}
+.settings{display:grid;gap:14px;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px}
+.setting{display:flex;justify-content:space-between;align-items:center;gap:12px}
+.seg{display:inline-flex;border:1.5px solid var(--btn);border-radius:10px;overflow:hidden}
+.seg button{border:0;background:transparent;color:var(--ink);font:600 15px "Barlow",sans-serif;padding:8px 12px;cursor:pointer}
+.seg button[aria-pressed=true]{background:var(--btn);color:var(--btn-ink)}
+.note{font-size:13px;color:var(--muted);margin-top:8px}
+.savednote{font-size:13px;color:var(--muted);margin-top:6px;min-height:20px}
+
+/* Escaneo */
+#scan{position:fixed;inset:0;background:var(--bg);z-index:10;display:none;overflow-y:auto;
+  padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+#scan.open{display:block}
+.scanin{max-width:560px;margin:0 auto;padding:12px 16px 24px}
+.stage{position:relative;width:100%;aspect-ratio:1;background:#000;border-radius:14px;overflow:hidden;touch-action:none}
+.stage canvas{position:relative;z-index:1;width:100%;height:100%;display:block}
+.status{display:flex;align-items:center;gap:10px;min-height:44px;margin:10px 0 6px;font-weight:500}
+.spinner{width:18px;height:18px;border-radius:50%;border:2.5px solid var(--line);border-top-color:var(--ink);animation:spin .8s linear infinite;flex:none}
+@keyframes spin{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion: reduce){.spinner{animation-duration:2.4s}}
+.tally{display:flex;justify-content:space-between;align-items:center;gap:12px;margin:6px 0 12px}
+.tally .big{font-size:56px}
+.tools{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px}
+.adjust{display:none;gap:10px;align-items:center;margin-bottom:12px}
+.adjust.on{display:flex}
+.adjust input{flex:1}
+.hint{font-size:14px;color:var(--muted);margin-bottom:12px}
+.warn{color:var(--warn)}
+.entryhead{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px}
+.slots{display:flex;gap:6px;flex-wrap:wrap;min-height:42px}
+.slot{width:42px;height:42px;border-radius:9px;border:1.5px dashed var(--line);display:inline-flex;align-items:center;justify-content:center}
+.slot.chip{width:42px;height:42px;font-size:22px;border-style:solid}
+.pad{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:12px}
+.key{min-height:60px;border-radius:12px;font:700 28px "Barlow Condensed",sans-serif;border:1.5px solid transparent;cursor:pointer;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+.key:active{transform:scale(.95)}
+.key.s2,.key.s1{border-color:#BDBDBD}
+.key.s0{border-color:var(--line)}
+.pad2{display:grid;grid-template-columns:1fr 2fr;gap:8px;margin-top:8px}
+.photolinks{display:flex;justify-content:center;gap:18px;margin-top:10px}
+.photolinks label{font-size:14px;color:var(--muted)}
+.dist{display:grid;grid-template-columns:30px 1fr 42px;gap:6px 10px;align-items:center;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px}
+.dist .bar{height:16px;border-radius:4px}
+.dist .n{text-align:right;font-family:"Barlow Condensed",sans-serif;font-size:17px;color:var(--muted)}
+.ver{font-size:12px;color:var(--muted)}
+main{padding-bottom:calc(96px + env(safe-area-inset-bottom,0px))}
+.tabs{position:fixed;left:0;right:0;bottom:0;z-index:5;display:grid;grid-template-columns:repeat(4,1fr);background:var(--card);border-top:1px solid var(--line);padding:6px 4px calc(6px + env(safe-area-inset-bottom,0px))}
+.tabs button{background:none;border:0;color:var(--muted);font:500 12px "Barlow",sans-serif;display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 0;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.tabs button svg{width:24px;height:24px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.tabs button[aria-current=page]{color:var(--ink);font-weight:600}
+.tabs button:focus-visible{outline:3px solid var(--blue);outline-offset:-3px}
+.cards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px 14px}
+.card .lab{font-size:13px;color:var(--muted)}
+.card .val{font:600 34px/1.1 "Barlow Condensed",sans-serif}
+.card .sub{font-size:12px;color:var(--muted)}
+.chartbox{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px}
+.chartbox svg{width:100%;height:auto;display:block;color:var(--ink)}
+.chartbox text{font:13px "Barlow",sans-serif;fill:var(--muted)}
+#errNote{color:var(--warn);font-size:13px;margin-top:10px;white-space:pre-wrap}
+</style>
+</head>
+<body>
+<main id="home">
+<div id="vSession">
+  <div class="top">
+    <h1 id="title">Sesión de hoy</h1>
+    <button class="linkbtn" id="backBtn" hidden>Volver</button>
+  </div>
+
+  <div class="hero">
+    <div class="big num" id="total">0</div>
+    <div class="stats">
+      <span class="muted">Flechas</span><b id="stArrows">0</b>
+      <span class="muted">Promedio</span><b id="stAvg">–</b>
+      <span class="muted">10 / X</span><b id="stTens">0 / 0</b>
+    </div>
+  </div>
+
+  <div id="scanActions">
+    <div class="entryhead"><span id="endLabel" style="font-weight:600;font-size:18px">Tanda 1</span><span class="num" id="endSum" style="font-size:30px;font-weight:600">0</span></div>
+    <div class="slots" id="slots"></div>
+    <div class="pad" id="pad"></div>
+    <div class="pad2">
+      <button class="btn ghost" id="backKey">Borrar</button>
+      <button class="btn" id="saveEnd">Guardar tanda</button>
+    </div>
+    <p class="note" id="entryNote" style="min-height:20px"></p>
+  </div>
+
+  <h2>Planilla</h2>
+  <div class="sheet" id="sheet"></div>
+
+  <div id="distBlock" hidden>
+    <h2>Puntajes</h2>
+    <div class="dist" id="dist"></div>
+  </div>
+
+  <div id="plotBlock" hidden>
+    <h2>Agrupamiento</h2>
+    <div class="plotwrap">
+      <canvas class="plot" id="plot" width="680" height="680" aria-label="Dónde cayeron las flechas de esta sesión"></canvas>
+      <p class="note" id="plotNote" style="text-align:center"></p>
+    </div>
+  </div>
+
+  <div id="sessionControls" style="margin-top:18px">
+    <button class="btn ghost" id="closeBtn" style="width:100%">Terminar sesión</button>
+    <p class="note" id="closedNote" hidden style="display:flex;justify-content:space-between;align-items:center;font-size:15px;color:var(--ink)">Sesión terminada. Quedó en el historial. <button class="linkbtn" id="undoClose">Deshacer</button></p>
+    <p class="savednote" id="savedNote" style="display:flex;gap:6px;align-items:center"></p>
+    <p id="errNote"></p>
+  </div>
+  <div id="viewControls" hidden style="margin-top:18px">
+    <button class="btn ghost" id="deleteSessionBtn" style="width:100%">Borrar esta sesión</button>
+  </div>
+
+</div>
+
+<div id="vHistory" hidden>
+  <div class="top"><h1>Historial</h1></div>
+  <div class="sheet" id="history"></div>
+</div>
+
+<div id="vStats" hidden>
+  <div class="top"><h1>Estadísticas</h1>
+    <div class="seg" id="segRange"><button data-v="5">Últ. 5</button><button data-v="10">Últ. 10</button><button data-v="0">Todas</button></div></div>
+  <div id="statsBody"></div>
+</div>
+
+<div id="vSettings" hidden>
+  <div class="top"><h1>Ajustes</h1></div>
+  <div>
+    <div class="settings">
+      <div class="setting"><span>Flechas por tanda</span>
+        <div class="seg" id="segArrows"><button data-v="3">3</button><button data-v="6">6</button></div></div>
+
+    </div>
+    <h2>Sincronización</h2>
+    <div class="settings">
+      <p style="margin:0" id="syncState">Sin configurar.</p>
+      <label for="syncUrl" class="muted" style="font-size:14px">Enlace de tu planilla</label>
+      <input id="syncUrl" type="url" inputmode="url" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="https://script.google.com/macros/s/…/exec" style="font:15px 'Barlow',sans-serif;padding:12px;border-radius:10px;border:1.5px solid var(--line);background:var(--bg);color:var(--ink);width:100%">
+      <div class="pad2" style="grid-template-columns:1fr 1fr;margin:0">
+        <button class="btn small ghost" id="syncSave">Guardar enlace</button>
+        <button class="btn small" id="syncNowBtn">Sincronizar ahora</button>
+      </div>
+      <button class="btn small ghost" id="pullBtn">Recuperar sesiones desde la planilla</button>
+      <p class="note" style="margin:0">Tus tandas se guardan primero en este teléfono y se suben a tu planilla de Google cuando hay conexión, mientras la app está abierta. El enlace es privado: no lo compartas.</p>
+    </div>
+    <h2>Importar datos</h2>
+    <div class="settings">
+      <textarea id="importBox" rows="3" placeholder="Pegá acá el código de importación" style="font:14px 'Barlow',sans-serif;padding:10px;border-radius:10px;border:1.5px solid var(--line);background:var(--bg);color:var(--ink);width:100%;resize:vertical"></textarea>
+      <button class="btn small ghost" id="importBtn">Importar</button>
+      <p class="note" style="margin:0" id="importNote"></p>
+    </div>
+    <div class="settings" style="margin-top:12px">
+      <div class="setting"><span>Versión de la app</span><b class="num" style="font-size:20px">1.0</b></div>
+    </div>
+  </div>
+</div>
+</main>
+
+<nav class="tabs" aria-label="Menú">
+  <button data-tab="session" aria-current="page"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.2"/></svg>Tirar</button>
+  <button data-tab="history"><svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h10"/></svg>Historial</button>
+  <button data-tab="stats"><svg viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>Estadísticas</button>
+  <button data-tab="settings"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>Ajustes</button>
+</nav>
+
+<script>
+(() => {
+"use strict";
+// ---------- Constantes ----------
+const N = 1000;            // lado del lienzo rectificado
+const M = 1.14;            // margen: el lienzo muestra hasta 1.14 radios
+const FACE_MM = 400;       // cara de 40 cm
+const PX = (N/2)/M;        // px por unidad de radio
+const LS_KEY = "tanda.v1";
+const $ = id => document.getElementById(id);
+
+// ---------- Estado ----------
+let state = { settings:{ perEnd:6 }, sessions:{}, sync:{ url:"", dirty:{}, deleted:[], lastOk:0, lastErr:"" } };
+let viewingId = null;   // sesión vieja abierta
+
+
+function newId(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,6); }
+function currentSession(){
+  let s = Object.values(state.sessions).find(x => !x.closed);
+  if (!s){ s = { kind:"session", id:newId(), startedAt:Date.now(), closed:false, ends:[] }; state.sessions[s.id] = s; }
+  return s;
+}
+
+// ---------- Guardado ----------
+function saveLocal(){ try{ localStorage.setItem(LS_KEY, JSON.stringify(state)); }catch(e){} }
+function loadLocal(){
+  try{ const raw = localStorage.getItem(LS_KEY); if (raw){ const d = JSON.parse(raw); if (d && d.sessions) state = Object.assign(state, d); } }catch(e){}
+}
+// ---------- Sincronización con Google Sheets ----------
+function syncState(){ const y = state.sync || (state.sync = {}); y.dirty = y.dirty || {}; y.deleted = y.deleted || []; y.url = y.url || ""; return y; }
+function persistSession(s){
+  s.updatedAt = Date.now();
+  syncState().dirty[s.id] = s.updatedAt;
+  saveLocal(); renderSync(); scheduleSync(600);
+}
+function removeSession(id){
+  delete state.sessions[id];
+  const y = syncState(); delete y.dirty[id]; if (!y.deleted.includes(id)) y.deleted.push(id);
+  saveLocal(); renderSync(); scheduleSync(600);
+}
+function persistSettings(){ saveLocal(); }
+function pendingCount(){
+  const y = syncState();
+  return Object.keys(y.dirty).filter(id => state.sessions[id] && (state.sessions[id].ends.length || state.sessions[id].closed)).length + y.deleted.length;
+}
+let syncing = false, syncTimer = 0;
+function scheduleSync(ms){ clearTimeout(syncTimer); syncTimer = setTimeout(syncNow, ms || 0); }
+function ago(t){
+  const m = Math.round((Date.now() - t) / 60000);
+  if (m < 1) return "recién"; if (m < 60) return "hace " + m + " min";
+  const h = Math.round(m / 60); if (h < 24) return "hace " + h + " h";
+  return new Date(t).toLocaleDateString("es-AR", { day:"numeric", month:"short" });
+}
+function renderSync(){
+  const y = syncState(), n = pendingCount(), el = $("savedNote"), st = $("syncState");
+  let txt, warn = false;
+  if (!y.url){ txt = n ? "Guardado en este teléfono. Configurá la sincronización en Ajustes." : "Sincronización sin configurar (Ajustes)."; warn = !!n; }
+  else if (syncing) txt = "Sincronizando…";
+  else if (!n) txt = "Todo sincronizado" + (y.lastOk ? " · " + ago(y.lastOk) : "") + ".";
+  else if (!navigator.onLine) txt = (n === 1 ? "1 cambio pendiente" : n + " cambios pendientes") + ". Se sube cuando vuelva la señal.";
+  else txt = (n === 1 ? "1 cambio pendiente" : n + " cambios pendientes") + (y.lastErr ? ". No se pudo subir: " + y.lastErr : ".");
+  if (y.url && n && (y.lastErr || !navigator.onLine)) warn = true;
+  el.textContent = txt; el.className = "savednote" + (warn ? " warn" : "");
+  if (st) st.textContent = !y.url ? "Sin configurar." : txt;
+}
+async function call(url, opts){
+  const ctl = new AbortController(); const t = setTimeout(() => ctl.abort(), 25000);
+  try{
+    const r = await fetch(url, Object.assign({ signal: ctl.signal, redirect: "follow" }, opts || {}));
+    const txt = await r.text(); let j;
+    try{ j = JSON.parse(txt); }catch(e){ throw new Error("la planilla respondió algo inesperado (¿el enlace es correcto?)"); }
+    if (!j.ok) throw new Error(j.error || "la planilla rechazó los datos");
+    return j;
+  } catch(e){
+    if (e.name === "AbortError") throw new Error("tardó demasiado");
+    if (e instanceof TypeError) throw new Error("no hay conexión con la planilla");
+    throw e;
+  } finally { clearTimeout(t); }
+}
+async function syncNow(){
+  const y = syncState();
+  if (!y.url || syncing){ renderSync(); return; }
+  const ids = Object.keys(y.dirty).filter(id => state.sessions[id]);
+  const sendS = ids.map(id => state.sessions[id]).filter(s => s.ends.length || s.closed);
+  const sendD = y.deleted.slice();
+  if (!sendS.length && !sendD.length){ renderSync(); return; }
+  if (!navigator.onLine){ renderSync(); return; }
+  const stamps = {}; sendS.forEach(s => stamps[s.id] = y.dirty[s.id]);
+  syncing = true; renderSync();
+  try{
+    await call(y.url, { method:"POST", body: JSON.stringify({ app:"tanda", v:1, sessions: JSON.parse(JSON.stringify(sendS)), deleted: sendD }) });
+    for (const id in stamps) if (y.dirty[id] === stamps[id]) delete y.dirty[id];
+    y.deleted = y.deleted.filter(id => !sendD.includes(id));
+    y.lastOk = Date.now(); y.lastErr = "";
+  }catch(e){ y.lastErr = e.message || "error desconocido"; }
+  finally{ syncing = false; saveLocal(); renderSync(); }
+}
+async function pullFromSheet(){
+  const y = syncState(); const btn = $("pullBtn");
+  if (!y.url){ $("syncState").textContent = "Primero guardá el enlace de tu planilla."; return; }
+  btn.disabled = true; btn.textContent = "Recuperando…";
+  try{
+    const sep = y.url.includes("?") ? "&" : "?";
+    const j = await call(y.url + sep + "action=pull");
+    let added = 0, updated = 0;
+    for (const r of (j.sessions || [])){
+      if (!r || !r.id || !Array.isArray(r.ends)) continue;
+      const loc = state.sessions[r.id];
+      if (!loc){ state.sessions[r.id] = r; added++; }
+      else if (!y.dirty[r.id] && JSON.stringify(loc.ends) !== JSON.stringify(r.ends)){ state.sessions[r.id] = r; updated++; }
+    }
+    const opens = Object.values(state.sessions).filter(s => !s.closed);
+    if (opens.length > 1) opens.sort((a,b) => b.startedAt - a.startedAt).slice(1).forEach(s => { if (!s.ends.length) delete state.sessions[s.id]; });
+    saveLocal(); renderHome();
+    $("syncState").textContent = added || updated ? "Listo: " + (added === 1 ? "1 sesión nueva" : added + " sesiones nuevas") + (updated ? (updated === 1 ? " y 1 actualizada" : " y " + updated + " actualizadas") : "") + "." : "Ya tenías todo lo que hay en la planilla.";
+  }catch(e){ $("syncState").textContent = "No se pudo recuperar: " + e.message + "."; }
+  finally{ btn.disabled = false; btn.textContent = "Recuperar sesiones desde la planilla"; }
+}
+// ---------- Puntaje ----------
+function scoreOf(x, y){
+  const sr = (state.settings.shaft/2) / (FACE_MM/2);
+  const rr = Math.max(0, Math.hypot(x, y) - sr);
+  if (rr > 1) return { s:0, x10:false };
+  const s = Math.max(1, 10 - Math.floor(rr / 0.1 + 1e-9));
+  return { s, x10: rr < 0.05 };
+}
+const label = a => a.s === 0 ? "M" : (a.x10 ? "X" : String(a.s));
+function chip(a){ const el = document.createElement("span"); el.className = "chip s"+a.s; el.textContent = label(a); return el; }
+function sortArrows(arr){ return [...arr].sort((a,b) => (b.s - a.s) || (b.x10 - a.x10)); }
+
+// ---------- Inicio ----------
+function shownSession(){ return viewingId ? state.sessions[viewingId] : currentSession(); }
+function fmtDate(t){ return new Date(t).toLocaleDateString("es-AR", { weekday:"short", day:"numeric", month:"short" }); }
+
+function renderHome(){
+  const s = shownSession();
+  const viewing = !!viewingId;
+  $("title").textContent = viewing ? "Sesión del " + fmtDate(s.startedAt) : "Sesión de hoy";
+  $("backBtn").hidden = !viewing;
+  $("scanActions").hidden = viewing;
+  $("sessionControls").hidden = viewing;
+  $("viewControls").hidden = !viewing;
+
+  const all = s.ends.flatMap(e => e.arrows);
+  const total = all.reduce((t,a) => t + a.s, 0);
+  $("total").textContent = total;
+  $("stArrows").textContent = all.length;
+  $("stAvg").textContent = all.length ? (total/all.length).toFixed(2).replace(".", ",") : "–";
+  $("stTens").textContent = all.filter(a => a.s === 10).length + " / " + all.filter(a => a.x10).length;
+  $("closeBtn").disabled = !s.ends.length;
+
+  const sheet = $("sheet"); sheet.innerHTML = "";
+  if (!s.ends.length){
+    sheet.innerHTML = '<div class="empty">Todavía no hay tandas. Cargá tus flechas con el teclado de arriba.</div>';
+  } else {
+    const head = document.createElement("div"); head.className = "row head";
+    head.innerHTML = "<span>#</span><span>Flechas</span><span style='text-align:right'>Tanda</span><span style='text-align:right'>Total</span>";
+    sheet.append(head);
+    let run = 0;
+    s.ends.forEach((e, i) => {
+      const t = e.arrows.reduce((x,a) => x + a.s, 0); run += t;
+      const row = document.createElement("div"); row.className = "row";
+      const n = document.createElement("span"); n.className = "n"; n.textContent = i+1;
+      const c = document.createElement("span"); c.className = "chips"; sortArrows(e.arrows).forEach(a => c.append(chip(a)));
+      if (!viewing){
+        const d = document.createElement("button"); d.className = "delrow"; d.textContent = "×"; d.setAttribute("aria-label", "Borrar tanda "+(i+1));
+        d.onclick = () => twoTap(d, "¿Borrar?", () => { s.ends.splice(i,1); persistSession(s); renderHome(); });
+        c.append(d);
+      }
+      const tt = document.createElement("span"); tt.className = "t"; tt.textContent = t;
+      const cc = document.createElement("span"); cc.className = "c"; cc.textContent = run;
+      row.append(n, c, tt, cc); sheet.append(row);
+    });
+  }
+  const pos = all.filter(a => typeof a.x === "number");
+  $("plotBlock").hidden = !pos.length;
+  if (pos.length) drawPlot($("plot"), s);
+  renderDist(all);
+  if (!viewing) renderEntry();
+  renderHistory();
+}
+
+// ---------- Teclado de puntajes ----------
+const KEYS = [["X",10,true],["10",10,false],["9",9],["8",8],["7",7],["6",6],["5",5],["4",4],["3",3],["2",2],["1",1],["M",0]];
+let draft = [];
+(function buildPad(){
+  const pad = $("pad");
+  KEYS.forEach(([lab, sc, x]) => {
+    const b = document.createElement("button");
+    b.className = "key s" + sc; b.textContent = lab; b.setAttribute("aria-label", lab === "M" ? "Fuera del blanco" : lab);
+    b.addEventListener("click", () => {
+      if (draft.length >= state.settings.perEnd){ $("entryNote").textContent = "La tanda ya tiene " + state.settings.perEnd + " flechas. Guardala o borrá una."; return; }
+      draft.push({ s: sc, x10: !!x }); $("entryNote").textContent = ""; renderEntry();
+    });
+    pad.append(b);
+  });
+})();
+function renderEntry(){
+  const s = currentSession(), per = state.settings.perEnd;
+  $("endLabel").textContent = "Tanda " + (s.ends.length + 1);
+  const sl = $("slots"); sl.innerHTML = "";
+  for (let i = 0; i < Math.max(per, draft.length); i++){
+    if (draft[i]){ const c = chip(draft[i]); c.classList.add("slot"); sl.append(c); }
+    else { const e = document.createElement("span"); e.className = "slot"; sl.append(e); }
+  }
+  $("endSum").textContent = draft.reduce((t,a) => t + a.s, 0);
+  $("saveEnd").disabled = !draft.length;
+  $("backKey").disabled = !draft.length;
+}
+$("backKey").addEventListener("click", () => { draft.pop(); $("entryNote").textContent = ""; renderEntry(); });
+$("saveEnd").addEventListener("click", () => {
+  if (!draft.length) return;
+  const s = currentSession();
+  s.ends.push({ at: Date.now(), arrows: sortArrows(draft).map(a => ({ s: a.s, x10: a.x10 })) });
+  const n = s.ends.length, t = draft.reduce((x,a) => x + a.s, 0);
+  draft = []; persistSession(s); renderHome();
+  $("entryNote").textContent = "Tanda " + n + " guardada: " + t + (t === 1 ? " punto." : " puntos.");
+});
+function renderDist(all){
+  $("distBlock").hidden = !all.length;
+  if (!all.length) return;
+  const rows = KEYS.map(([lab, sc, x]) => ({ lab, sc, n: all.filter(a => a.s === sc && (sc !== 10 || !!a.x10 === !!x)).length }));
+  const max = Math.max(1, ...rows.map(r => r.n));
+  const d = $("dist"); d.innerHTML = "";
+  rows.forEach(r => {
+    const l = chip({ s: r.sc, x10: r.lab === "X" }); if (r.lab === "10") l.textContent = "10";
+    const w = document.createElement("div"); const bar = document.createElement("div");
+    bar.className = "bar chip s" + r.sc; bar.style.cssText = "display:block;height:16px;padding:0;width:" + (r.n ? Math.max(3, r.n / max * 100) : 0) + "%";
+    w.append(bar);
+    const n = document.createElement("span"); n.className = "n"; n.textContent = r.n;
+    d.append(l, w, n);
+  });
+}
+
+function renderHistory(){
+  const h = $("history"); h.innerHTML = "";
+  const past = Object.values(state.sessions).filter(s => s.closed).sort((a,b) => b.startedAt - a.startedAt);
+  if (!past.length){ h.innerHTML = '<div class="empty">Cuando termines una sesión, va a aparecer acá.</div>'; return; }
+  past.forEach(s => {
+    const all = s.ends.flatMap(e => e.arrows);
+    const tot = all.reduce((t,a) => t + a.s, 0);
+    const b = document.createElement("button"); b.className = "hist";
+    b.innerHTML = `<span><span style="font-weight:600">${fmtDate(s.startedAt)}</span><br><span class="muted" style="font-size:14px">${s.ends.length} tandas · promedio ${all.length ? (tot/all.length).toFixed(2).replace(".", ",") : "–"}</span></span><span class="num">${tot}</span>`;
+    b.onclick = () => { viewingId = s.id; renderHome(); showTab("session", "history"); };
+    h.append(b);
+  });
+}
+
+function drawFace(ctx, cx, cy, R){
+  const cols = ["#FAFAFA","#FAFAFA","#1A1A1A","#1A1A1A","#2C8FD6","#2C8FD6","#E0322B","#E0322B","#F5C518","#F5C518"];
+  for (let i = 0; i < 10; i++){
+    const r = R * (10 - i) / 10;
+    ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI*2); ctx.fillStyle = cols[i]; ctx.fill();
+    ctx.lineWidth = Math.max(1, R/300); ctx.strokeStyle = i >= 2 && i <= 3 ? "#666" : "rgba(0,0,0,.35)"; ctx.stroke();
+  }
+  ctx.beginPath(); ctx.arc(cx, cy, R*0.05, 0, Math.PI*2); ctx.strokeStyle = "rgba(0,0,0,.4)"; ctx.stroke();
+}
+function drawPlot(cv, s){
+  const ctx = cv.getContext("2d"); const W = cv.width, R = W*0.46, c = W/2;
+  ctx.clearRect(0,0,W,W); drawFace(ctx, c, c, R);
+  const all = s.ends.flatMap((e, i) => e.arrows.map(a => ({...a, last: i === s.ends.length - 1}))).filter(a => typeof a.x === "number");
+  all.forEach(a => {
+    ctx.beginPath(); ctx.arc(c + a.x*R, c + a.y*R, a.last ? 9 : 7, 0, Math.PI*2);
+    ctx.fillStyle = a.last ? "#00C2A8" : "rgba(29,36,34,.85)"; ctx.fill();
+    ctx.lineWidth = 2.5; ctx.strokeStyle = "#fff"; ctx.stroke();
+  });
+  if (all.length >= 3){
+    const mx = all.reduce((t,a) => t + a.x, 0)/all.length, my = all.reduce((t,a) => t + a.y, 0)/all.length;
+    const X = c + mx*R, Y = c + my*R;
+    ctx.lineWidth = 4; ctx.strokeStyle = "#fff"; ctx.beginPath(); ctx.moveTo(X-16,Y); ctx.lineTo(X+16,Y); ctx.moveTo(X,Y-16); ctx.lineTo(X,Y+16); ctx.stroke();
+    ctx.lineWidth = 2; ctx.strokeStyle = "#1A1A1A"; ctx.stroke();
+    const dir = [];
+    if (my < -0.06) dir.push("arriba"); else if (my > 0.06) dir.push("abajo");
+    if (mx < -0.06) dir.push("a la izquierda"); else if (mx > 0.06) dir.push("a la derecha");
+    $("plotNote").textContent = "La cruz marca el centro de tu grupo" + (dir.length ? ": se te va " + dir.join(" y ") + "." : ", bien centrado.") + " En verde, la última tanda.";
+  } else $("plotNote").textContent = all.length ? "En verde, la última tanda." : "";
+}
+
+function renderSettings(){
+  const set = (segId, v) => $(segId).querySelectorAll("button").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.v === String(v))));
+  set("segArrows", state.settings.perEnd);
+  $("syncUrl").value = syncState().url;
+}
+$("segArrows").onclick = e => { const v = e.target.dataset?.v; if (!v) return; state.settings.perEnd = +v; renderSettings(); persistSettings(); };
+$("syncSave").onclick = async () => {
+  const v = $("syncUrl").value.trim();
+  if (v && !/^https:\/\/script\.google(usercontent)?\.com\//.test(v)){ $("syncState").textContent = "Ese enlace no parece de Google Apps Script. Tiene que empezar con https://script.google.com/"; return; }
+  const y = syncState(); y.url = v; y.lastErr = "";
+  for (const s of Object.values(state.sessions)) if (s.ends.length || s.closed) y.dirty[s.id] = y.dirty[s.id] || Date.now();
+  saveLocal(); renderSync();
+  if (!v) return;
+  $("syncState").textContent = "Probando la conexión…";
+  try{ await call(v); $("syncState").textContent = "Conectado. Subiendo tus sesiones…"; await syncNow(); }
+  catch(e){ $("syncState").textContent = "Guardado, pero no pude conectar: " + e.message + "."; }
+};
+$("syncNowBtn").onclick = () => { syncState().lastErr = ""; syncNow(); };
+$("pullBtn").onclick = pullFromSheet;
+$("importBtn").onclick = () => {
+  const raw = $("importBox").value.trim(); const note = $("importNote");
+  if (!raw){ note.textContent = "Pegá primero el código de importación."; return; }
+  let data;
+  try{ data = JSON.parse(raw.startsWith("{") || raw.startsWith("[") ? raw : decodeURIComponent(escape(atob(raw)))); }
+  catch(e){ note.textContent = "Ese código no es válido. Copialo completo y probá de nuevo."; return; }
+  const list = Array.isArray(data) ? data : (data.sessions || []);
+  let n = 0;
+  for (const r of list){
+    if (!r || !r.id || !Array.isArray(r.ends) || state.sessions[r.id]) continue;
+    state.sessions[r.id] = { kind:"session", id:r.id, startedAt:r.startedAt, closed: r.closed !== false, ends: r.ends };
+    syncState().dirty[r.id] = Date.now(); n++;
+  }
+  saveLocal(); renderHome(); scheduleSync(300);
+  note.textContent = n ? (n === 1 ? "Importé 1 sesión." : `Importé ${n} sesiones.`) : "No había sesiones nuevas para importar.";
+  if (n) $("importBox").value = "";
+};
+// Confirmación de dos toques
+function twoTap(btn, armedText, fn){
+  if (btn.dataset.armed === "1"){
+    clearTimeout(btn._t); btn.dataset.armed = ""; btn.textContent = btn._orig; btn.style.borderColor = "";
+    if (fn) fn(); return true;
+  }
+  btn._orig = btn.textContent; btn.dataset.armed = "1"; btn.textContent = armedText; btn.style.borderColor = "var(--red)";
+  btn._t = setTimeout(() => { btn.dataset.armed = ""; btn.textContent = btn._orig; btn.style.borderColor = ""; }, 4000);
+  return false;
+}
+$("backBtn").onclick = () => { viewingId = null; renderHome(); showTab("history"); };
+let undoTimer = 0;
+$("closeBtn").onclick = () => {
+  const s = currentSession(); if (!s.ends.length) return;
+  s.closed = true; persistSession(s); currentSession(); renderHome();
+  const n = $("closedNote"); n.hidden = false;
+  $("undoClose").onclick = () => {
+    clearTimeout(undoTimer); n.hidden = true;
+    for (const x of Object.values(state.sessions)) if (!x.closed && !x.ends.length) delete state.sessions[x.id];
+    s.closed = false; persistSession(s); renderHome();
+  };
+  clearTimeout(undoTimer); undoTimer = setTimeout(() => { n.hidden = true; }, 8000);
+  window.scrollTo({ top: document.body.scrollHeight, behavior: "smooth" });
+};
+$("deleteSessionBtn").onclick = async () => {
+  if (!twoTap($("deleteSessionBtn"), "Tocá de nuevo para borrarla para siempre")) return;
+  setTimeout(() => showTab("history"), 0);
+  await removeSession(viewingId); viewingId = null; renderHome();
+};
+
+// ---------- Menú ----------
+let tab = "session";
+function showTab(t, navAs){
+  tab = t;
+  if (t !== "session" && viewingId){ viewingId = null; renderHome(); }
+  for (const [k, id] of [["session","vSession"],["history","vHistory"],["stats","vStats"],["settings","vSettings"]]) $(id).hidden = k !== t;
+  const cur = navAs || t;
+  document.querySelectorAll(".tabs button").forEach(b => b.dataset.tab === cur ? b.setAttribute("aria-current","page") : b.removeAttribute("aria-current"));
+  if (t === "stats") renderStats();
+  window.scrollTo(0, 0);
+}
+document.querySelectorAll(".tabs button").forEach(b => b.addEventListener("click", () => {
+  if (b.dataset.tab === "session" && viewingId){ viewingId = null; renderHome(); }
+  showTab(b.dataset.tab);
+}));
+
+// ---------- Estadísticas ----------
+let statsRange = 10;
+try{ const v = localStorage.getItem("tanda.range"); if (v !== null) statsRange = +v; }catch(e){}
+function paintRange(){ $("segRange").querySelectorAll("button").forEach(b => b.setAttribute("aria-pressed", String(+b.dataset.v === statsRange))); }
+$("segRange").onclick = e => { const v = e.target.dataset?.v; if (v === undefined) return; statsRange = +v; try{ localStorage.setItem("tanda.range", v); }catch(_){} renderStats(); };
+const avgOf = arr => arr.length ? arr.reduce((t,a) => t + a.s, 0) / arr.length : 0;
+const fmt = (n, d=2) => n.toFixed(d).replace(".", ",");
+function esc(t){ const d = document.createElement("span"); d.textContent = t; return d.innerHTML; }
+function renderStats(){
+  paintRange();
+  const body = $("statsBody"); body.innerHTML = "";
+  let list = Object.values(state.sessions).filter(s => s.ends && s.ends.some(e => e.arrows.length)).sort((a,b) => a.startedAt - b.startedAt);
+  if (statsRange) list = list.slice(-statsRange);
+  if (!list.length){ body.innerHTML = '<div class="sheet"><div class="empty">Cuando cargues tus primeras tandas, acá vas a ver cómo venís.</div></div>'; return; }
+  const all = list.flatMap(s => s.ends.flatMap(e => e.arrows));
+  const avg = avgOf(all);
+  const per = list.map(s => ({ s, avg: avgOf(s.ends.flatMap(e => e.arrows)), n: s.ends.reduce((t,e) => t + e.arrows.length, 0) }));
+  const best = per.reduce((b, x) => x.avg > b.avg ? x : b, per[0]);
+  const tens = all.filter(a => a.s === 10).length, nines = all.filter(a => a.s >= 9).length;
+  const shortDate = t => new Date(t).toLocaleDateString("es-AR", { day:"numeric", month:"numeric" });
+
+  let h = '<div class="cards">';
+  h += `<div class="card"><div class="lab">Promedio por flecha</div><div class="val">${fmt(avg)}</div><div class="sub">${list.length} ${list.length === 1 ? "sesión" : "sesiones"}</div></div>`;
+  h += `<div class="card"><div class="lab">Proyección a 60 flechas</div><div class="val">${Math.round(avg*60)}</div><div class="sub">ronda indoor de 18 m, sobre 600</div></div>`;
+  h += `<div class="card"><div class="lab">Mejor sesión</div><div class="val">${fmt(best.avg)}</div><div class="sub">${esc(fmtDate(best.s.startedAt))}</div></div>`;
+  h += `<div class="card"><div class="lab">En el amarillo (9 o 10)</div><div class="val">${Math.round(nines/all.length*100)}%</div><div class="sub">${all.length} flechas · ${tens} dieces</div></div>`;
+  h += '</div>';
+
+  // Evolución
+  h += '<h2>Promedio por flecha, sesión a sesión</h2><div class="chartbox">';
+  if (per.length < 2) h += '<p class="note" style="margin:0">Con dos sesiones o más vas a ver tu evolución acá.</p>';
+  else {
+    const W = 340, H = 180, L = 30, Rr = 24, T = 12, B = 26;
+    const ys = per.map(p => p.avg); let lo = Math.floor(Math.min(...ys)) , hi = Math.ceil(Math.max(...ys));
+    if (hi - lo < 2){ lo = Math.max(0, hi - 2); } if (hi === lo) hi = lo + 1;
+    const X = i => L + (W - L - Rr) * (per.length === 1 ? .5 : i / (per.length - 1));
+    const Y = v => T + (H - T - B) * (1 - (v - lo) / (hi - lo));
+    let svg = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Promedio por flecha en cada sesión">`;
+    for (let v = lo; v <= hi; v++){ svg += `<line x1="${L}" x2="${W-Rr}" y1="${Y(v)}" y2="${Y(v)}" stroke="currentColor" stroke-opacity=".12"/><text x="${L-6}" y="${Y(v)+4}" text-anchor="end">${v}</text>`; }
+    svg += `<polyline points="${per.map((p,i) => X(i)+","+Y(p.avg)).join(" ")}" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round"/>`;
+    per.forEach((p,i) => { svg += `<circle cx="${X(i)}" cy="${Y(p.avg)}" r="4.5" fill="var(--card)" stroke="currentColor" stroke-width="2.5"/>`; });
+    const step = Math.ceil(per.length / 6);
+    per.forEach((p,i) => { if (i % step === 0 || i === per.length - 1) svg += `<text x="${X(i)}" y="${H-6}" text-anchor="middle">${shortDate(p.s.startedAt)}</text>`; });
+    svg += '</svg>';
+    const first = per[0].avg, last = per[per.length-1].avg, d = last - first;
+    h += svg + `<p class="note" style="margin:6px 0 0">${Math.abs(d) < 0.05 ? "Estable entre la primera y la última sesión del período." : (d > 0 ? "Subiste " : "Bajaste ") + fmt(Math.abs(d)) + " puntos por flecha entre la primera y la última sesión del período."}</p>`;
+  }
+  h += '</div>';
+
+  // Rendimiento por tanda
+  const maxEnds = Math.max(...list.map(s => s.ends.length));
+  const byEnd = [];
+  for (let k = 0; k < maxEnds; k++){ const arr = list.flatMap(s => s.ends[k] ? s.ends[k].arrows : []); if (arr.length) byEnd.push({ k, avg: avgOf(arr), n: arr.length }); }
+  h += '<h2>¿Cómo rendís a lo largo de la sesión?</h2><div class="chartbox">';
+  if (byEnd.length < 3) h += '<p class="note" style="margin:0">Con sesiones de 3 tandas o más vas a ver si te cansás hacia el final.</p>';
+  else {
+    const W = 340, H = 170, L = 30, T = 18, B = 26, bw = (W - L - 6) / byEnd.length;
+    const lo = Math.max(0, Math.floor(Math.min(...byEnd.map(b => b.avg))) - 1), hi = 10;
+    const Y = v => T + (H - T - B) * (1 - (v - lo) / (hi - lo));
+    let svg = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Promedio por flecha según el número de tanda">`;
+    for (let v = lo; v <= hi; v += 2){ svg += `<line x1="${L}" x2="${W}" y1="${Y(v)}" y2="${Y(v)}" stroke="currentColor" stroke-opacity=".12"/><text x="${L-6}" y="${Y(v)+4}" text-anchor="end">${v}</text>`; }
+    byEnd.forEach((b, i) => {
+      const x = L + 3 + i * bw, y = Y(b.avg);
+      svg += `<rect x="${x + bw*.15}" y="${y}" width="${bw*.7}" height="${Y(lo) - y}" rx="3" fill="currentColor" fill-opacity=".8"/>`;
+      if (byEnd.length <= 12) svg += `<text x="${x + bw/2}" y="${H-6}" text-anchor="middle">${b.k+1}</text>`;
+    });
+    svg += '</svg>';
+    const half = Math.ceil(byEnd.length / 2);
+    const a1 = avgOf(byEnd.slice(0, half).flatMap(b => Array(b.n).fill({s:b.avg}))), a2 = avgOf(byEnd.slice(half).flatMap(b => Array(b.n).fill({s:b.avg})));
+    const dd = a2 - a1;
+    h += svg + `<p class="note" style="margin:6px 0 0">Número de tanda abajo, promedio por flecha a la izquierda. ${Math.abs(dd) < 0.15 ? "Mantenés el nivel de principio a fin." : dd < 0 ? "En la segunda mitad de la sesión bajás " + fmt(-dd) + " puntos por flecha: puede ser cansancio." : "En la segunda mitad rendís " + fmt(dd) + " puntos más por flecha: te cuesta arrancar."}</p>`;
+  }
+  h += '</div>';
+
+  // Distribución
+  h += '<h2>Distribución de puntajes</h2><div class="dist" id="statDist"></div>';
+  body.innerHTML = h;
+  const d = $("statDist"); const rows = KEYS.map(([lab, sc, x]) => ({ lab, sc, n: all.filter(a => a.s === sc && (sc !== 10 || !!a.x10 === !!x)).length }));
+  const max = Math.max(1, ...rows.map(r => r.n));
+  rows.forEach(r => {
+    const l = chip({ s: r.sc, x10: r.lab === "X" }); if (r.lab === "10") l.textContent = "10";
+    const w = document.createElement("div"); const bar = document.createElement("div");
+    bar.className = "bar chip s" + r.sc; bar.style.cssText = "display:block;height:16px;padding:0;width:" + (r.n ? Math.max(3, r.n / max * 100) : 0) + "%";
+    w.append(bar);
+    const n = document.createElement("span"); n.className = "n"; n.textContent = Math.round(r.n / all.length * 100) + "%";
+    d.append(l, w, n);
+  });
+}
+
+// ---------- Errores visibles ----------
+window.addEventListener("error", e => { const n = $("errNote"); if (n) n.textContent = "Error: " + (e.message || e.error || "desconocido"); });
+window.addEventListener("unhandledrejection", e => { const n = $("errNote"); if (n) n.textContent = "Error: " + ((e.reason && (e.reason.message || e.reason.code)) || e.reason); });
+// ---------- Arranque ----------
+loadLocal(); syncState(); currentSession(); renderSettings(); renderHome(); renderSync();
+scheduleSync(1500);
+window.addEventListener("online", () => scheduleSync(500));
+window.addEventListener("offline", renderSync);
+document.addEventListener("visibilitychange", () => { if (!document.hidden){ renderSync(); scheduleSync(800); } });
+setInterval(() => { if (!document.hidden){ if (pendingCount()) syncNow(); else renderSync(); } }, 60000);
+if ("serviceWorker" in navigator) window.addEventListener("load", () => navigator.serviceWorker.register("sw.js").catch(() => {}));
+})();
+</script>
+</body>
+</html>
