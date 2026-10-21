@@ -83,7 +83,8 @@ input[type=file]{position:absolute;width:1px;height:1px;opacity:0;pointer-events
 canvas.plot{width:100%;max-width:340px;display:block;margin:0 auto;aspect-ratio:1}
 .hist{display:flex;justify-content:space-between;align-items:center;padding:12px;border-top:1px solid var(--line);cursor:pointer;background:none;border-left:0;border-right:0;border-bottom:0;width:100%;color:var(--ink);font:inherit;text-align:left}
 .hist:first-child{border-top:0}
-.hist .num{font-size:24px;font-weight:600}
+.hist .num{font-size:24px;font-weight:600;white-space:nowrap}
+.hist > span:first-child{min-width:0}
 .settings{display:grid;gap:14px;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px}
 .setting{display:flex;justify-content:space-between;align-items:center;gap:12px}
 .seg{display:inline-flex;border:1.5px solid var(--btn);border-radius:10px;overflow:hidden}
@@ -141,6 +142,32 @@ main{padding-bottom:calc(96px + env(safe-area-inset-bottom,0px))}
 .chartbox{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px}
 .chartbox svg{width:100%;height:auto;display:block;color:var(--ink)}
 .chartbox text{font:13px "Barlow",sans-serif;fill:var(--muted)}
+.tag{display:inline-block;font:600 12px/1 "Barlow",sans-serif;padding:5px 8px;border-radius:6px;margin-bottom:6px;letter-spacing:.01em}
+.tag.free{background:var(--soft);color:var(--ink)}
+.tag.comp{background:var(--btn);color:var(--btn-ink)}
+.cfg{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px 14px;margin:0 0 16px}
+.cfgsum{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.cfgsum b{font-weight:600}
+.cfgrow{display:flex;flex-direction:column;gap:6px;margin-top:12px}
+.cfgrow > span{font-size:13px;color:var(--muted)}
+.seg.wrap{flex-wrap:wrap}
+.seg.full{display:flex;width:100%}
+.seg.full button{flex:1;padding:9px 4px}
+.roundinfo{font-size:14px;color:var(--muted);margin-top:8px}
+.herosub{font-size:14px;color:var(--muted);margin:-8px 0 14px}
+.row.half{background:var(--soft);font-size:14px;color:var(--muted);padding-top:6px;padding-bottom:6px}
+.row.half .t{font-size:18px;color:var(--ink)}
+.donebox{background:var(--card);border:1.5px solid var(--btn);border-radius:14px;padding:14px;text-align:center;margin-top:4px}
+.donebox .big{font-size:64px}
+.filters{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px}
+.filters .seg button{padding:7px 10px;font-size:14px}
+.heat{display:grid;grid-auto-flow:column;grid-template-rows:repeat(7,1fr);gap:3px}
+.heat i{display:block;aspect-ratio:1;border-radius:3px;background:var(--soft)}
+.heatwrap{display:grid;grid-template-columns:14px 1fr;gap:6px;align-items:stretch}
+.heatdays{display:grid;grid-template-rows:repeat(7,1fr);gap:3px;font-size:10px;color:var(--muted);line-height:1}
+.heatdays span{display:flex;align-items:center}
+.legend{display:flex;align-items:center;gap:4px;justify-content:flex-end;font-size:12px;color:var(--muted);margin-top:8px}
+.legend i{width:11px;height:11px;border-radius:3px;display:inline-block}
 #errNote{color:var(--warn);font-size:13px;margin-top:10px;white-space:pre-wrap}
 </style>
 </head>
@@ -152,6 +179,9 @@ main{padding-bottom:calc(96px + env(safe-area-inset-bottom,0px))}
     <button class="linkbtn" id="backBtn" hidden>Volver</button>
   </div>
 
+  <div class="cfg" id="cfgCard"></div>
+
+  <div id="sessBody">
   <div class="hero">
     <div class="big num" id="total">0</div>
     <div class="stats">
@@ -160,7 +190,9 @@ main{padding-bottom:calc(96px + env(safe-area-inset-bottom,0px))}
       <span class="muted">10 / X</span><b id="stTens">0 / 0</b>
     </div>
   </div>
+  <p class="herosub" id="heroSub" hidden></p>
 
+  <div id="roundDone" hidden></div>
   <div id="scanActions">
     <div class="entryhead"><span id="endLabel" style="font-weight:600;font-size:18px">Tanda 1</span><span class="num" id="endSum" style="font-size:30px;font-weight:600">0</span></div>
     <div class="slots" id="slots"></div>
@@ -194,6 +226,7 @@ main{padding-bottom:calc(96px + env(safe-area-inset-bottom,0px))}
     <p class="savednote" id="savedNote" style="display:flex;gap:6px;align-items:center"></p>
     <p id="errNote"></p>
   </div>
+  </div>
   <div id="viewControls" hidden style="margin-top:18px">
     <button class="btn ghost" id="deleteSessionBtn" style="width:100%">Borrar esta sesión</button>
   </div>
@@ -206,20 +239,20 @@ main{padding-bottom:calc(96px + env(safe-area-inset-bottom,0px))}
 </div>
 
 <div id="vStats" hidden>
-  <div class="top"><h1>Estadísticas</h1>
-    <div class="seg" id="segRange"><button data-v="5">Últ. 5</button><button data-v="10">Últ. 10</button><button data-v="0">Todas</button></div></div>
+  <div class="top"><h1>Estadísticas</h1></div>
+  <h2 style="margin-top:0">Rendimiento</h2>
+  <div class="filters">
+    <div class="seg wrap" id="segDist"></div>
+    <div class="seg" id="segRange"><button data-v="5">Últ. 5</button><button data-v="10">Últ. 10</button><button data-v="0">Todas</button></div>
+  </div>
   <div id="statsBody"></div>
+  <div id="volBlock" style="margin-top:28px"></div>
 </div>
 
 <div id="vSettings" hidden>
   <div class="top"><h1>Ajustes</h1></div>
   <div>
-    <div class="settings">
-      <div class="setting"><span>Flechas por tanda</span>
-        <div class="seg" id="segArrows"><button data-v="3">3</button><button data-v="6">6</button></div></div>
-
-    </div>
-    <h2>Sincronización</h2>
+    <h2 style="margin-top:0">Sincronización</h2>
     <div class="settings">
       <p style="margin:0" id="syncState">Sin configurar.</p>
       <label for="syncUrl" class="muted" style="font-size:14px">Enlace de tu planilla</label>
@@ -238,7 +271,7 @@ main{padding-bottom:calc(96px + env(safe-area-inset-bottom,0px))}
       <p class="note" style="margin:0" id="importNote"></p>
     </div>
     <div class="settings" style="margin-top:12px">
-      <div class="setting"><span>Versión de la app</span><b class="num" style="font-size:20px">1.0</b></div>
+      <div class="setting"><span>Versión de la app</span><b class="num" style="font-size:20px">1.2</b></div>
     </div>
   </div>
 </div>
@@ -381,6 +414,78 @@ const label = a => a.s === 0 ? "M" : (a.x10 ? "X" : String(a.s));
 function chip(a){ const el = document.createElement("span"); el.className = "chip s"+a.s; el.textContent = label(a); return el; }
 function sortArrows(arr){ return [...arr].sort((a,b) => (b.s - a.s) || (b.x10 - a.x10)); }
 
+// ---------- Tipo de sesión y condiciones ----------
+const ROUNDS = {
+  indoor18:  { name:"Ronda indoor 18 m", short:"Indoor 18 m", ends:20, per:3, dist:18, face:40,  place:"indoor",  half:10 },
+  outdoor70: { name:"Ronda WA 70 m",     short:"WA 70 m",     ends:12, per:6, dist:70, face:122, place:"outdoor", half:6 }
+};
+const DISTS = [10, 18, 25, 30, 50, 70], FACES = [40, 60, 80, 122];
+const WIND = { calmo:"Sin viento", leve:"Viento leve", fuerte:"Viento fuerte" };
+function defaultCfg(){
+  const l = state.lastCfg || {};
+  return { type: l.type || "practice", dist: l.dist || 18, face: l.face || 40, place: l.place || "indoor", wind: l.wind || "calmo", per: l.per || state.settings.perEnd || 6 };
+}
+function begun(s){ return !!(s && (s.ends.length || s.begun)); }
+function cfgOf(s){ return s && s.cfg ? s.cfg : null; }
+function roundOf(s){ const c = cfgOf(s); return c && ROUNDS[c.type] ? ROUNDS[c.type] : null; }
+function perOf(s){ const r = roundOf(s); if (r) return r.per; const c = cfgOf(s); return (c && c.per) || state.settings.perEnd || 6; }
+function maxOf(s){ const r = roundOf(s); return r ? r.ends * r.per * 10 : 0; }
+function cfgText(c){
+  if (!c) return "Sin datos de distancia";
+  const r = ROUNDS[c.type];
+  const parts = [r ? r.short : "Práctica " + c.dist + " m", "cara " + c.face + " cm", c.place === "outdoor" ? "aire libre" : "indoor"];
+  if (c.place === "outdoor" && c.wind && c.wind !== "calmo") parts.push(WIND[c.wind].toLowerCase());
+  return parts.join(" · ");
+}
+let cfgOpen = false;
+function segHtml(id, opts, cur, cls){
+  return `<div class="seg ${cls || ""}" id="${id}">` + opts.map(([v, l]) => `<button type="button" data-v="${v}" aria-pressed="${String(v) === String(cur)}">${l}</button>`).join("") + "</div>";
+}
+function renderCfg(){
+  const s = shownSession(), card = $("cfgCard");
+  if (!s){ card.hidden = true; return; }
+  card.hidden = false;
+  const viewing = !!viewingId;
+  if (!viewing && !begun(s)){ if (!s.cfg) s.cfg = defaultCfg(); cfgOpen = true; }
+  const c = s.cfg;
+  if (!cfgOpen){
+    card.innerHTML = `<div class="cfgsum"><span><b>${esc(c ? (ROUNDS[c.type] ? "Simulación: " + ROUNDS[c.type].name.replace("Ronda ", "ronda ") : "Práctica libre") : "Sesión")}</b><br><span class="muted" style="font-size:14px">${esc(cfgText(c))}</span></span><button class="linkbtn" id="cfgEdit">${c ? "Cambiar" : "Completar"}</button></div>`;
+    $("cfgEdit").onclick = () => { if (!s.cfg) s.cfg = defaultCfg(); cfgOpen = true; renderCfg(); };
+    return;
+  }
+  const r = ROUNDS[c.type];
+  let h = `<div class="cfgsum"><b>${viewing ? "Datos de la sesión" : "¿Qué vas a tirar hoy?"}</b></div>`;
+  h += `<div class="cfgrow"><span>Tipo</span>${segHtml("cfType", [["practice","Práctica libre"],["indoor18","Indoor 18 m"],["outdoor70","WA 70 m"]], c.type, "full")}</div><p class="roundinfo" style="margin-top:6px">Indoor 18 m y WA 70 m simulan una ronda de competencia.</p>`;
+  if (r){
+    h += `<p class="roundinfo">${r.ends} tandas de ${r.per} flechas (${r.ends * r.per} en total), a ${r.dist} m con cara de ${r.face} cm. Máximo: ${r.ends * r.per * 10} puntos.</p>`;
+  } else {
+    h += `<div class="cfgrow"><span>Distancia</span>${segHtml("cfDist", DISTS.map(d => [d, d + " m"]), c.dist, "full")}</div>`;
+    h += `<div class="cfgrow"><span>Cara</span>${segHtml("cfFace", FACES.map(f => [f, f + " cm"]), c.face, "full")}</div>`;
+    h += `<div class="cfgrow"><span>Flechas por tanda</span>${segHtml("cfPer", [[3,"3"],[6,"6"]], c.per || 6, "full")}</div>`;
+  }
+  if (!r || c.type === "outdoor70"){
+    if (!r) h += `<div class="cfgrow"><span>Lugar</span>${segHtml("cfPlace", [["indoor","Indoor"],["outdoor","Aire libre"]], c.place, "full")}</div>`;
+    if (c.place === "outdoor") h += `<div class="cfgrow"><span>Viento</span>${segHtml("cfWind", Object.entries(WIND), c.wind || "calmo", "full")}</div>`;
+  }
+  const starting = !viewing && !begun(s);
+  h += `<button class="btn${starting ? "" : " small"}" id="cfgDone" style="width:100%;margin-top:14px">${starting ? "Comenzar sesión" : "Listo"}</button>`;
+  card.innerHTML = h;
+  const bind = (id, fn) => { const el = $(id); if (el) el.onclick = e => { const v = e.target.dataset && e.target.dataset.v; if (v === undefined) return; fn(v); if (viewingId) renderCfg(); else renderHome(); }; };
+  bind("cfType", v => { c.type = v; const rr = ROUNDS[v]; if (rr){ c.dist = rr.dist; c.face = rr.face; c.place = rr.place; } });
+  bind("cfDist", v => { c.dist = +v; });
+  bind("cfFace", v => { c.face = +v; });
+  bind("cfPer", v => { c.per = +v; });
+  bind("cfPlace", v => { c.place = v; });
+  bind("cfWind", v => { c.wind = v; });
+  $("cfgDone").onclick = () => {
+    cfgOpen = false; state.lastCfg = Object.assign({}, c);
+    if (!viewing && !begun(s)){ s.begun = true; s.startedAt = Date.now(); }
+    if (draft.length > perOf(s)) draft = draft.slice(0, perOf(s));
+    if (s.ends.length || viewing) persistSession(s); else saveLocal();
+    renderHome();
+  };
+}
+
 // ---------- Inicio ----------
 function shownSession(){ return viewingId ? state.sessions[viewingId] : currentSession(); }
 function fmtDate(t){ return new Date(t).toLocaleDateString("es-AR", { weekday:"short", day:"numeric", month:"short" }); }
@@ -390,7 +495,6 @@ function renderHome(){
   const viewing = !!viewingId;
   $("title").textContent = viewing ? "Sesión del " + fmtDate(s.startedAt) : "Sesión de hoy";
   $("backBtn").hidden = !viewing;
-  $("scanActions").hidden = viewing;
   $("sessionControls").hidden = viewing;
   $("viewControls").hidden = !viewing;
 
@@ -401,6 +505,17 @@ function renderHome(){
   $("stAvg").textContent = all.length ? (total/all.length).toFixed(2).replace(".", ",") : "–";
   $("stTens").textContent = all.filter(a => a.s === 10).length + " / " + all.filter(a => a.x10).length;
   $("closeBtn").disabled = !s.ends.length;
+  const started = viewing || begun(s);
+  $("sessBody").hidden = !started;
+  $("title").textContent = viewing ? "Sesión del " + fmtDate(s.startedAt) : (started ? "Sesión de hoy" : "Nueva sesión");
+  $("closeBtn").textContent = !viewing && started && !s.ends.length ? "Cancelar sesión" : "Terminar sesión";
+  $("closeBtn").disabled = false;
+  const rnd = roundOf(s);
+  $("heroSub").hidden = !rnd;
+  if (rnd) $("heroSub").textContent = "de " + maxOf(s) + " · tanda " + Math.min(s.ends.length, rnd.ends) + " de " + rnd.ends;
+  const done = !viewing && rnd && s.ends.length >= rnd.ends;
+  $("roundDone").hidden = !done; $("scanActions").hidden = viewing || done;
+  if (done) $("roundDone").innerHTML = `<div class="donebox"><p style="font-weight:600">${esc(rnd.name)} completa</p><div class="big num">${total}</div><p class="muted">de ${maxOf(s)} · promedio ${fmt(total / all.length)} por flecha</p><p class="note">Terminá la sesión para guardarla en el historial.</p></div>`;
 
   const sheet = $("sheet"); sheet.innerHTML = "";
   if (!s.ends.length){
@@ -423,12 +538,20 @@ function renderHome(){
       const tt = document.createElement("span"); tt.className = "t"; tt.textContent = t;
       const cc = document.createElement("span"); cc.className = "c"; cc.textContent = run;
       row.append(n, c, tt, cc); sheet.append(row);
+      if (rnd && (i + 1 === rnd.half || i + 1 === rnd.ends) && i + 1 <= rnd.ends){
+        const h1 = i + 1 === rnd.half;
+        const sub = s.ends.slice(h1 ? 0 : rnd.half, i + 1).flatMap(x => x.arrows).reduce((x,a) => x + a.s, 0);
+        const hr = document.createElement("div"); hr.className = "row half";
+        hr.innerHTML = `<span></span><span>${h1 ? "1.ª mitad" : "2.ª mitad"}</span><span class="t">${sub}</span><span></span>`;
+        sheet.append(hr);
+      }
     });
   }
   const pos = all.filter(a => typeof a.x === "number");
   $("plotBlock").hidden = !pos.length;
   if (pos.length) drawPlot($("plot"), s);
   renderDist(all);
+  renderCfg();
   if (!viewing) renderEntry();
   renderHistory();
 }
@@ -442,15 +565,16 @@ let draft = [];
     const b = document.createElement("button");
     b.className = "key s" + sc; b.textContent = lab; b.setAttribute("aria-label", lab === "M" ? "Fuera del blanco" : lab);
     b.addEventListener("click", () => {
-      if (draft.length >= state.settings.perEnd){ $("entryNote").textContent = "La tanda ya tiene " + state.settings.perEnd + " flechas. Guardala o borrá una."; return; }
+      const per = perOf(currentSession());
+      if (draft.length >= per){ $("entryNote").textContent = "La tanda ya tiene " + per + " flechas. Guardala o borrá una."; return; }
       draft.push({ s: sc, x10: !!x }); $("entryNote").textContent = ""; renderEntry();
     });
     pad.append(b);
   });
 })();
 function renderEntry(){
-  const s = currentSession(), per = state.settings.perEnd;
-  $("endLabel").textContent = "Tanda " + (s.ends.length + 1);
+  const s = currentSession(), per = perOf(s), rnd = roundOf(s);
+  $("endLabel").textContent = "Tanda " + (s.ends.length + 1) + (rnd ? " de " + rnd.ends : "");
   const sl = $("slots"); sl.innerHTML = "";
   for (let i = 0; i < Math.max(per, draft.length); i++){
     if (draft[i]){ const c = chip(draft[i]); c.classList.add("slot"); sl.append(c); }
@@ -464,6 +588,8 @@ $("backKey").addEventListener("click", () => { draft.pop(); $("entryNote").textC
 $("saveEnd").addEventListener("click", () => {
   if (!draft.length) return;
   const s = currentSession();
+  if (!s.ends.length){ if (!s.begun) s.startedAt = Date.now(); s.begun = true; if (!s.cfg) s.cfg = defaultCfg(); state.lastCfg = Object.assign({}, s.cfg); cfgOpen = false; }
+  const rr = roundOf(s); if (rr && s.ends.length >= rr.ends) return;
   s.ends.push({ at: Date.now(), arrows: sortArrows(draft).map(a => ({ s: a.s, x10: a.x10 })) });
   const n = s.ends.length, t = draft.reduce((x,a) => x + a.s, 0);
   draft = []; persistSession(s); renderHome();
@@ -478,7 +604,7 @@ function renderDist(all){
   rows.forEach(r => {
     const l = chip({ s: r.sc, x10: r.lab === "X" }); if (r.lab === "10") l.textContent = "10";
     const w = document.createElement("div"); const bar = document.createElement("div");
-    bar.className = "bar chip s" + r.sc; bar.style.cssText = "display:block;height:16px;padding:0;width:" + (r.n ? Math.max(3, r.n / max * 100) : 0) + "%";
+    bar.className = "bar chip s" + r.sc; bar.style.cssText = "display:block;height:16px;padding:0;min-width:0;border:0;width:" + (r.n ? Math.max(3, r.n / max * 100) : 0) + "%";
     w.append(bar);
     const n = document.createElement("span"); n.className = "n"; n.textContent = r.n;
     d.append(l, w, n);
@@ -493,8 +619,11 @@ function renderHistory(){
     const all = s.ends.flatMap(e => e.arrows);
     const tot = all.reduce((t,a) => t + a.s, 0);
     const b = document.createElement("button"); b.className = "hist";
-    b.innerHTML = `<span><span style="font-weight:600">${fmtDate(s.startedAt)}</span><br><span class="muted" style="font-size:14px">${s.ends.length} tandas · promedio ${all.length ? (tot/all.length).toFixed(2).replace(".", ",") : "–"}</span></span><span class="num">${tot}</span>`;
-    b.onclick = () => { viewingId = s.id; renderHome(); showTab("session", "history"); };
+    const rr = roundOf(s), c = cfgOf(s);
+    const kind = rr ? rr.short + (s.ends.length < rr.ends ? " (incompleta)" : "") : (c ? c.dist + " m · cara " + c.face + " cm" : "Sin distancia");
+    const tag = rr ? '<span class="tag comp">Simulación de competencia</span>' : '<span class="tag free">Práctica libre</span>';
+    b.innerHTML = `<span>${tag}<br><span style="font-weight:600">${fmtDate(s.startedAt)}</span><br><span class="muted" style="font-size:14px">${esc(kind)} · ${s.ends.length} tandas · prom. ${all.length ? (tot/all.length).toFixed(2).replace(".", ",") : "–"}</span></span><span class="num">${tot}${rr ? '<span class="muted" style="font-size:15px"> /' + maxOf(s) + "</span>" : ""}</span>`;
+    b.onclick = () => { viewingId = s.id; cfgOpen = false; renderHome(); showTab("session", "history"); };
     h.append(b);
   });
 }
@@ -531,10 +660,8 @@ function drawPlot(cv, s){
 
 function renderSettings(){
   const set = (segId, v) => $(segId).querySelectorAll("button").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.v === String(v))));
-  set("segArrows", state.settings.perEnd);
   $("syncUrl").value = syncState().url;
 }
-$("segArrows").onclick = e => { const v = e.target.dataset?.v; if (!v) return; state.settings.perEnd = +v; renderSettings(); persistSettings(); };
 $("syncSave").onclick = async () => {
   const v = $("syncUrl").value.trim();
   if (v && !/^https:\/\/script\.google(usercontent)?\.com\//.test(v)){ $("syncState").textContent = "Ese enlace no parece de Google Apps Script. Tiene que empezar con https://script.google.com/"; return; }
@@ -575,11 +702,12 @@ function twoTap(btn, armedText, fn){
   btn._t = setTimeout(() => { btn.dataset.armed = ""; btn.textContent = btn._orig; btn.style.borderColor = ""; }, 4000);
   return false;
 }
-$("backBtn").onclick = () => { viewingId = null; renderHome(); showTab("history"); };
+$("backBtn").onclick = () => { viewingId = null; cfgOpen = false; renderHome(); showTab("history"); };
 let undoTimer = 0;
 $("closeBtn").onclick = () => {
-  const s = currentSession(); if (!s.ends.length) return;
-  s.closed = true; persistSession(s); currentSession(); renderHome();
+  const s = currentSession();
+  if (!s.ends.length){ s.begun = false; draft = []; cfgOpen = true; saveLocal(); renderHome(); window.scrollTo(0, 0); return; }
+  s.closed = true; persistSession(s); currentSession(); cfgOpen = false; draft = []; renderHome();
   const n = $("closedNote"); n.hidden = false;
   $("undoClose").onclick = () => {
     clearTimeout(undoTimer); n.hidden = true;
@@ -599,7 +727,7 @@ $("deleteSessionBtn").onclick = async () => {
 let tab = "session";
 function showTab(t, navAs){
   tab = t;
-  if (t !== "session" && viewingId){ viewingId = null; renderHome(); }
+  if (t !== "session" && viewingId){ viewingId = null; cfgOpen = false; renderHome(); }
   for (const [k, id] of [["session","vSession"],["history","vHistory"],["stats","vStats"],["settings","vSettings"]]) $(id).hidden = k !== t;
   const cur = navAs || t;
   document.querySelectorAll(".tabs button").forEach(b => b.dataset.tab === cur ? b.setAttribute("aria-current","page") : b.removeAttribute("aria-current"));
@@ -607,7 +735,7 @@ function showTab(t, navAs){
   window.scrollTo(0, 0);
 }
 document.querySelectorAll(".tabs button").forEach(b => b.addEventListener("click", () => {
-  if (b.dataset.tab === "session" && viewingId){ viewingId = null; renderHome(); }
+  if (b.dataset.tab === "session" && viewingId){ viewingId = null; cfgOpen = false; renderHome(); }
   showTab(b.dataset.tab);
 }));
 
@@ -619,10 +747,71 @@ $("segRange").onclick = e => { const v = e.target.dataset?.v; if (v === undefine
 const avgOf = arr => arr.length ? arr.reduce((t,a) => t + a.s, 0) / arr.length : 0;
 const fmt = (n, d=2) => n.toFixed(d).replace(".", ",");
 function esc(t){ const d = document.createElement("span"); d.textContent = t; return d.innerHTML; }
+let statsDist = "all";
+try{ const v = localStorage.getItem("tanda.dist"); if (v) statsDist = v; }catch(e){}
+function distKey(s){ const c = cfgOf(s); return c ? String(c.dist) : "none"; }
+function dayKey(t){ const d = new Date(t); return d.getFullYear() + "-" + (d.getMonth()+1) + "-" + d.getDate(); }
+function weekStart(t){ const d = new Date(t); d.setHours(0,0,0,0); const wd = (d.getDay() + 6) % 7; d.setDate(d.getDate() - wd); return d; }
+function renderVolume(){
+  const box = $("volBlock");
+  const sessions = Object.values(state.sessions).filter(s => s.ends && s.ends.length);
+  const ends = sessions.flatMap(s => s.ends.map(e => ({ at: e.at > 1e11 ? e.at : s.startedAt, n: e.arrows.length })));
+  if (!ends.length){ box.innerHTML = '<h2 style="margin-top:0">Entrenamiento</h2><div class="sheet"><div class="empty">Acá vas a ver cuánto entrenás: flechas por semana, días de práctica y tu racha.</div></div>'; return; }
+  const byDay = {}; ends.forEach(e => { const k = dayKey(e.at); byDay[k] = (byDay[k] || 0) + e.n; });
+  const now = Date.now(), w0 = weekStart(now).getTime(), WEEK = 7 * 864e5;
+  const weekArrows = k => ends.filter(e => e.at >= w0 - k*WEEK && e.at < w0 - (k-1)*WEEK).reduce((t,e) => t + e.n, 0);
+  const thisW = weekArrows(0), lastW = weekArrows(1);
+  // racha de semanas con práctica (si esta semana todavía no tiraste, cuenta desde la anterior)
+  let streak = 0, k = thisW ? 0 : 1; while (weekArrows(k) > 0){ streak++; k++; }
+  const m = new Date(); const mStart = new Date(m.getFullYear(), m.getMonth(), 1).getTime();
+  const monthEnds = ends.filter(e => e.at >= mStart);
+  const monthDays = new Set(monthEnds.map(e => dayKey(e.at))).size, monthArrows = monthEnds.reduce((t,e) => t + e.n, 0);
+  let h = '<h2 style="margin-top:0">Entrenamiento</h2><div class="cards">';
+  h += `<div class="card"><div class="lab">Flechas esta semana</div><div class="val">${thisW}</div><div class="sub">semana pasada: ${lastW}</div></div>`;
+  h += `<div class="card"><div class="lab">Racha</div><div class="val">${streak}</div><div class="sub">${streak === 1 ? "semana" : "semanas"} seguidas practicando</div></div>`;
+  h += `<div class="card"><div class="lab">Días este mes</div><div class="val">${monthDays}</div><div class="sub">${monthArrows} flechas</div></div>`;
+  h += `<div class="card"><div class="lab">Flechas en total</div><div class="val">${ends.reduce((t,e) => t + e.n, 0)}</div><div class="sub">${sessions.length} ${sessions.length === 1 ? "sesión" : "sesiones"}</div></div>`;
+  h += '</div>';
+  // flechas por semana (12 semanas)
+  const W = 12, wk = []; for (let i = W - 1; i >= 0; i--) wk.push({ i, n: weekArrows(i), d: new Date(w0 - i*WEEK) });
+  const mx = Math.max(1, ...wk.map(x => x.n));
+  const SW = 340, SH = 140, L = 30, T = 14, B = 24, bw = (SW - L - 4) / W;
+  let svg = `<svg viewBox="0 0 ${SW} ${SH}" role="img" aria-label="Flechas por semana, últimas 12 semanas">`;
+  const top = Math.ceil(mx / 50) * 50 || 50;
+  [0, top/2, top].forEach(v => { const y = T + (SH - T - B) * (1 - v/top); svg += `<line x1="${L}" x2="${SW}" y1="${y}" y2="${y}" stroke="currentColor" stroke-opacity=".12"/><text x="${L-6}" y="${y+4}" text-anchor="end">${v}</text>`; });
+  wk.forEach((x, j) => {
+    const bh = (SH - T - B) * x.n / top, X = L + 2 + j*bw;
+    if (x.n) svg += `<rect x="${X + bw*.15}" y="${SH - B - bh}" width="${bw*.7}" height="${bh}" rx="3" fill="currentColor" fill-opacity="${x.i === 0 ? 1 : .55}"/>`;
+    if (j % 3 === 2 || j === W-1) svg += `<text x="${X + bw/2}" y="${SH-6}" text-anchor="middle">${x.d.getDate()}/${x.d.getMonth()+1}</text>`;
+  });
+  svg += "</svg>";
+  h += `<h2>Flechas por semana</h2><div class="chartbox">${svg}<p class="note" style="margin:6px 0 0">Últimas 12 semanas. La barra más oscura es la semana actual.</p></div>`;
+  // calendario (12 semanas, lunes a domingo)
+  const startCal = w0 - (W - 1) * WEEK, today = new Date(); today.setHours(0,0,0,0);
+  const dmax = Math.max(1, ...Object.values(byDay));
+  let cells = "";
+  for (let d = 0; d < W * 7; d++){
+    const t = startCal + d * 864e5, n = byDay[dayKey(t)] || 0, future = t > today.getTime();
+    const op = n ? (0.3 + 0.7 * n / dmax).toFixed(2) : 0;
+    const dd = new Date(t);
+    cells += `<i title="${dd.getDate()}/${dd.getMonth()+1}: ${n} flechas" style="${future ? "opacity:.35;" : ""}${n ? `background:color-mix(in srgb, var(--ink) ${Math.round(op*100)}%, var(--soft))` : ""}"></i>`;
+  }
+  h += `<h2>Calendario</h2><div class="chartbox"><div class="heatwrap"><div class="heatdays"><span>L</span><span></span><span>M</span><span></span><span>V</span><span></span><span>D</span></div><div class="heat" style="grid-template-columns:repeat(${W},1fr)">${cells}</div></div><div class="legend">Menos <i style="background:var(--soft)"></i><i style="background:color-mix(in srgb, var(--ink) 35%, var(--soft))"></i><i style="background:color-mix(in srgb, var(--ink) 65%, var(--soft))"></i><i style="background:var(--ink)"></i> Más</div></div>`;
+  box.innerHTML = h;
+}
 function renderStats(){
+  renderVolume();
   paintRange();
   const body = $("statsBody"); body.innerHTML = "";
-  let list = Object.values(state.sessions).filter(s => s.ends && s.ends.some(e => e.arrows.length)).sort((a,b) => a.startedAt - b.startedAt);
+  const withData = Object.values(state.sessions).filter(s => s.ends && s.ends.some(e => e.arrows.length)).sort((a,b) => a.startedAt - b.startedAt);
+  // filtro por distancia
+  const keys = [...new Set(withData.map(distKey))].sort((a,b) => (a === "none") - (b === "none") || a - b);
+  if (statsDist !== "all" && !keys.includes(statsDist)) statsDist = "all";
+  const opts = [["all","Todas"]].concat(keys.map(k => [k, k === "none" ? "Sin dato" : k + " m"]));
+  $("segDist").innerHTML = opts.map(([v,l]) => `<button type="button" data-v="${v}" aria-pressed="${v === statsDist}">${l}</button>`).join("");
+  $("segDist").hidden = keys.length < 2;
+  $("segDist").onclick = e => { const v = e.target.dataset && e.target.dataset.v; if (!v) return; statsDist = v; try{ localStorage.setItem("tanda.dist", v); }catch(_){} renderStats(); };
+  let list = statsDist === "all" ? withData : withData.filter(s => distKey(s) === statsDist);
   if (statsRange) list = list.slice(-statsRange);
   if (!list.length){ body.innerHTML = '<div class="sheet"><div class="empty">Cuando cargues tus primeras tandas, acá vas a ver cómo venís.</div></div>'; return; }
   const all = list.flatMap(s => s.ends.flatMap(e => e.arrows));
@@ -631,14 +820,21 @@ function renderStats(){
   const best = per.reduce((b, x) => x.avg > b.avg ? x : b, per[0]);
   const tens = all.filter(a => a.s === 10).length, nines = all.filter(a => a.s >= 9).length;
   const shortDate = t => new Date(t).toLocaleDateString("es-AR", { day:"numeric", month:"numeric" });
+  const mixed = statsDist === "all" && keys.length > 1;
+  const dnum = statsDist !== "all" && statsDist !== "none" ? +statsDist : (keys.length === 1 && keys[0] !== "none" ? +keys[0] : null);
+  const proj = dnum !== null && dnum >= 50 ? { n:72, max:720, txt:"ronda de 72 flechas, sobre 720" } : { n:60, max:600, txt:"ronda indoor de 60 flechas, sobre 600" };
+  const rounds = list.filter(s => { const r = roundOf(s); return r && s.ends.length >= r.ends; }).map(s => ({ s, tot: s.ends.flatMap(e => e.arrows).reduce((t,a) => t + a.s, 0) }));
+  const bestRound = rounds.reduce((b, x) => !b || x.tot > b.tot ? x : b, null);
 
   let h = '<div class="cards">';
-  h += `<div class="card"><div class="lab">Promedio por flecha</div><div class="val">${fmt(avg)}</div><div class="sub">${list.length} ${list.length === 1 ? "sesión" : "sesiones"}</div></div>`;
-  h += `<div class="card"><div class="lab">Proyección a 60 flechas</div><div class="val">${Math.round(avg*60)}</div><div class="sub">ronda indoor de 18 m, sobre 600</div></div>`;
+  h += `<div class="card"><div class="lab">Promedio por flecha</div><div class="val">${fmt(avg)}</div><div class="sub">${list.length} ${list.length === 1 ? "sesión" : "sesiones"}${mixed ? " · distancias mezcladas" : ""}</div></div>`;
+  if (bestRound) h += `<div class="card"><div class="lab">Mejor ronda completa</div><div class="val">${bestRound.tot}</div><div class="sub">de ${maxOf(bestRound.s)} · ${esc(fmtDate(bestRound.s.startedAt))}</div></div>`;
+  else if (mixed) h += `<div class="card"><div class="lab">Proyección a ronda</div><div class="val">–</div><div class="sub">elegí una distancia arriba</div></div>`;
+  else h += `<div class="card"><div class="lab">Proyección a ${proj.n} flechas</div><div class="val">${Math.round(avg*proj.n)}</div><div class="sub">${proj.txt}</div></div>`;
   h += `<div class="card"><div class="lab">Mejor sesión</div><div class="val">${fmt(best.avg)}</div><div class="sub">${esc(fmtDate(best.s.startedAt))}</div></div>`;
   h += `<div class="card"><div class="lab">En el amarillo (9 o 10)</div><div class="val">${Math.round(nines/all.length*100)}%</div><div class="sub">${all.length} flechas · ${tens} dieces</div></div>`;
   h += '</div>';
-
+  if (mixed) h += '<p class="note">Estás viendo distancias mezcladas: los promedios a distintas distancias no se comparan bien. Filtrá por distancia arriba.</p>';
   // Evolución
   h += '<h2>Promedio por flecha, sesión a sesión</h2><div class="chartbox">';
   if (per.length < 2) h += '<p class="note" style="margin:0">Con dos sesiones o más vas a ver tu evolución acá.</p>';
@@ -653,7 +849,7 @@ function renderStats(){
     svg += `<polyline points="${per.map((p,i) => X(i)+","+Y(p.avg)).join(" ")}" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round"/>`;
     per.forEach((p,i) => { svg += `<circle cx="${X(i)}" cy="${Y(p.avg)}" r="4.5" fill="var(--card)" stroke="currentColor" stroke-width="2.5"/>`; });
     const step = Math.ceil(per.length / 6);
-    per.forEach((p,i) => { if (i % step === 0 || i === per.length - 1) svg += `<text x="${X(i)}" y="${H-6}" text-anchor="middle">${shortDate(p.s.startedAt)}</text>`; });
+    per.forEach((p,i) => { const last = per.length - 1; if ((i % step === 0 && (i === last || last - i >= step)) || i === last) svg += `<text x="${X(i)}" y="${H-6}" text-anchor="middle">${shortDate(p.s.startedAt)}</text>`; });
     svg += '</svg>';
     const first = per[0].avg, last = per[per.length-1].avg, d = last - first;
     h += svg + `<p class="note" style="margin:6px 0 0">${Math.abs(d) < 0.05 ? "Estable entre la primera y la última sesión del período." : (d > 0 ? "Subiste " : "Bajaste ") + fmt(Math.abs(d)) + " puntos por flecha entre la primera y la última sesión del período."}</p>`;
@@ -693,7 +889,7 @@ function renderStats(){
   rows.forEach(r => {
     const l = chip({ s: r.sc, x10: r.lab === "X" }); if (r.lab === "10") l.textContent = "10";
     const w = document.createElement("div"); const bar = document.createElement("div");
-    bar.className = "bar chip s" + r.sc; bar.style.cssText = "display:block;height:16px;padding:0;width:" + (r.n ? Math.max(3, r.n / max * 100) : 0) + "%";
+    bar.className = "bar chip s" + r.sc; bar.style.cssText = "display:block;height:16px;padding:0;min-width:0;border:0;width:" + (r.n ? Math.max(3, r.n / max * 100) : 0) + "%";
     w.append(bar);
     const n = document.createElement("span"); n.className = "n"; n.textContent = Math.round(r.n / all.length * 100) + "%";
     d.append(l, w, n);
